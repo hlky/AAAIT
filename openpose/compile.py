@@ -72,3 +72,7 @@ def body():
         "openpose_body",
         constants=None,
     )
+
+if __name__ == "__main__":
+    body()
+    # hand()

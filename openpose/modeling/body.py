@@ -16,9 +16,10 @@ def make_layers(block, no_relu_layers):
             layer = nn.MaxPool2d(*v)
             layers.append((layer_name, layer))
         else:
-            op = nn.Conv2dBiasReluFewChannels
+            in_channel = v[0]
+            op = nn.Conv2dBiasRelu if in_channel >= 8 else nn.Conv2dBiasReluFewChannels
             if layer_name in no_relu_layers:
-                op = nn.Conv2dBiasFewChannels
+                op = nn.Conv2dBias if in_channel >= 8 else nn.Conv2dBiasFewChannels
             conv2d = op(*v)
             layers.append((layer_name, conv2d))
 
@@ -77,7 +78,7 @@ class bodypose_model(nn.Module):
         # Stages 2 - 6
         for i in range(2, 7):
             blocks['block%d_1' % i] = OrderedDict([
-                    ('Mconv1_stage%d_L1' % i, [185, 128, 7, 1, 3]),
+                    ('Mconv1_stage%d_L1' % i, [188, 128, 7, 1, 3]), #185
                     ('Mconv2_stage%d_L1' % i, [128, 128, 7, 1, 3]),
                     ('Mconv3_stage%d_L1' % i, [128, 128, 7, 1, 3]),
                     ('Mconv4_stage%d_L1' % i, [128, 128, 7, 1, 3]),
@@ -87,7 +88,7 @@ class bodypose_model(nn.Module):
                 ])
 
             blocks['block%d_2' % i] = OrderedDict([
-                    ('Mconv1_stage%d_L2' % i, [185, 128, 7, 1, 3]),
+                    ('Mconv1_stage%d_L2' % i, [188, 128, 7, 1, 3]), #185
                     ('Mconv2_stage%d_L2' % i, [128, 128, 7, 1, 3]),
                     ('Mconv3_stage%d_L2' % i, [128, 128, 7, 1, 3]),
                     ('Mconv4_stage%d_L2' % i, [128, 128, 7, 1, 3]),
@@ -121,22 +122,27 @@ class bodypose_model(nn.Module):
         out1_1 = self.model1_1(out1)
         out1_2 = self.model1_2(out1)
         out2 = ops.concatenate()([out1_1, out1_2, out1], -1)
+        out2 = ops.pad_last_dim(4, 188)(out2)
 
         out2_1 = self.model2_1(out2)
         out2_2 = self.model2_2(out2)
         out3 = ops.concatenate()([out2_1, out2_2, out1], -1)
+        out3 = ops.pad_last_dim(4, 188)(out3)
 
         out3_1 = self.model3_1(out3)
         out3_2 = self.model3_2(out3)
         out4 = ops.concatenate()([out3_1, out3_2, out1], -1)
+        out4 = ops.pad_last_dim(4, 188)(out4)
 
         out4_1 = self.model4_1(out4)
         out4_2 = self.model4_2(out4)
         out5 = ops.concatenate()([out4_1, out4_2, out1], -1)
+        out5 = ops.pad_last_dim(4, 188)(out5)
 
         out5_1 = self.model5_1(out5)
         out5_2 = self.model5_2(out5)
         out6 = ops.concatenate()([out5_1, out5_2, out1], -1)
+        out6 = ops.pad_last_dim(4, 188)(out6)
 
         out6_1 = self.model6_1(out6)
         out6_2 = self.model6_2(out6)

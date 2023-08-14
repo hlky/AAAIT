@@ -16,9 +16,10 @@ def make_layers(block, no_relu_layers):
             layer = nn.MaxPool2d(*v)
             layers.append((layer_name, layer))
         else:
-            op = nn.Conv2dBiasReluFewChannels
+            in_channel = v[0]
+            op = nn.Conv2dBiasRelu if in_channel >= 8 else nn.Conv2dBiasReluFewChannels
             if layer_name in no_relu_layers:
-                op = nn.Conv2dBiasFewChannels
+                op = nn.Conv2dBias if in_channel >= 8 else nn.Conv2dBiasFewChannels
             conv2d = op(*v)
             layers.append((layer_name, conv2d))
 
@@ -65,7 +66,7 @@ class handpose_model(nn.Module):
         # stage 2-6
         for i in range(2, 7):
             blocks['block%d' % i] = OrderedDict([
-                    ('Mconv1_stage%d' % i, [150, 128, 7, 1, 3]),
+                    ('Mconv1_stage%d' % i, [152, 128, 7, 1, 3]), # 150
                     ('Mconv2_stage%d' % i, [128, 128, 7, 1, 3]),
                     ('Mconv3_stage%d' % i, [128, 128, 7, 1, 3]),
                     ('Mconv4_stage%d' % i, [128, 128, 7, 1, 3]),
@@ -89,14 +90,19 @@ class handpose_model(nn.Module):
         out1_0 = self.model1_0(x)
         out1_1 = self.model1_1(out1_0)
         concat_stage2 = ops.concatenate()([out1_1, out1_0], -1)
+        concat_stage2 = ops.pad_last_dim(4, 152)(concat_stage2)
         out_stage2 = self.model2(concat_stage2)
         concat_stage3 = ops.concatenate()([out_stage2, out1_0], -1)
+        concat_stage3 = ops.pad_last_dim(4, 152)(concat_stage3)
         out_stage3 = self.model3(concat_stage3)
         concat_stage4 = ops.concatenate()([out_stage3, out1_0], -1)
+        concat_stage4 = ops.pad_last_dim(4, 152)(concat_stage4)
         out_stage4 = self.model4(concat_stage4)
         concat_stage5 = ops.concatenate()([out_stage4, out1_0], -1)
+        concat_stage5 = ops.pad_last_dim(4, 152)(concat_stage5)
         out_stage5 = self.model5(concat_stage5)
         concat_stage6 = ops.concatenate()([out_stage5, out1_0], -1)
+        concat_stage6 = ops.pad_last_dim(4, 152)(concat_stage6)
         out_stage6 = self.model6(concat_stage6)
         out_stage6 = mark_output(out_stage6, "output")
         return out_stage6
