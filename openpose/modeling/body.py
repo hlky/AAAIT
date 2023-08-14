@@ -16,9 +16,9 @@ def make_layers(block, no_relu_layers):
             layer = nn.MaxPool2d(*v)
             layers.append((layer_name, layer))
         else:
-            op = nn.Conv2dBiasRelu
+            op = nn.Conv2dBiasReluFewChannels
             if layer_name in no_relu_layers:
-                op = nn.Conv2dBias
+                op = nn.Conv2dBiasFewChannels
             conv2d = op(*v)
             layers.append((layer_name, conv2d))
 
