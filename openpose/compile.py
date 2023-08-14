@@ -9,33 +9,66 @@ from aitemplate.frontend import IntVar, Tensor
 from aitemplate.testing import detect_target
 
 from modeling.body import bodypose_model
+from modeling.hand import handpose_model
 
-mod = bodypose_model()
-mod.name_parameter_tensor()
+def hand():
+    mod = handpose_model()
+    mod.name_parameter_tensor()
 
-batch_size = [1, 1]
-height = [256, 512]
-width = [256, 512]
+    batch_size = [1, 1]
+    height = [256, 512]
+    width = [256, 512]
 
-batch_size = IntVar(values=list(batch_size), name="batch_size")
-channels = 3
-height = IntVar(values=list(height), name="height")
-width = IntVar(values=list(width), name="width")
+    batch_size = IntVar(values=list(batch_size), name="batch_size")
+    channels = 3
+    height = IntVar(values=list(height), name="height")
+    width = IntVar(values=list(width), name="width")
 
-image = Tensor(
-    shape=[batch_size, height, width, channels], name="input_pixels", is_input=True
-)
+    image = Tensor(
+        shape=[batch_size, height, width, channels], name="input_pixels", is_input=True
+    )
 
-out = mod(image)
+    out = mod(image)
 
 
-target = detect_target(
-    use_fp16_acc=True, convert_conv_to_gemm=True
-)
-compile_model(
-    out,
-    target,
-    "A:/",
-    "openpose",
-    constants=None,
-)
+    target = detect_target(
+        use_fp16_acc=True, convert_conv_to_gemm=True
+    )
+    compile_model(
+        out,
+        target,
+        "A:/",
+        "openpose_hand",
+        constants=None,
+    )
+
+def body():
+    mod = bodypose_model()
+    mod.name_parameter_tensor()
+
+    batch_size = [1, 1]
+    height = [256, 512]
+    width = [256, 512]
+
+    batch_size = IntVar(values=list(batch_size), name="batch_size")
+    channels = 3
+    height = IntVar(values=list(height), name="height")
+    width = IntVar(values=list(width), name="width")
+
+    image = Tensor(
+        shape=[batch_size, height, width, channels], name="input_pixels", is_input=True
+    )
+
+    out = mod(image)
+
+
+    target = detect_target(
+        use_fp16_acc=True, convert_conv_to_gemm=True
+    )
+    compile_model(
+        out,
+        target,
+        "A:/",
+        "openpose_body",
+        constants=None,
+    )
